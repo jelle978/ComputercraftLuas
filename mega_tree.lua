@@ -1,6 +1,7 @@
 -- CONFIG
 local saplingSlot = 1  -- slot met spruce saplings
 local fuelSlot = 16    -- slot met brandstof (optioneel)
+local maxTreeHeight = 20 -- maximale boomhoogte voor oogsten
 
 -- REFUEL FUNCTIE
 function refuelIfNeeded()
@@ -35,7 +36,7 @@ function harvestTree()
         end
 
         -- Hak alle logs boven dit blok
-        while true do
+        for i = 1, maxTreeHeight do
             local success, block = turtle.inspectUp()
             if success and block.name:find("log") then
                 turtle.digUp()
@@ -45,9 +46,9 @@ function harvestTree()
             end
         end
 
-        -- Ga terug naar startlaag
-        while turtle.getY() > 0 do
-            turtle.down()
+        -- Terug naar grondlaag (max 20 blokken omlaag)
+        for i = 1, maxTreeHeight do
+            if not turtle.down() then break end
         end
 
         -- Terug naar startpositie van de grid
