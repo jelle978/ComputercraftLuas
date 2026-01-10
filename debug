@@ -1,0 +1,145 @@
+-- CONFIG
+local saplingSlot, fuelSlot = 1, 16
+local chestSide = "right"
+
+-- STARTPOS = Turtle start naast de boom
+local startX, startZ = 0, 0
+
+-- REFUEL + CHECK SAPLINGS
+local function checkResources()
+    if turtle.getFuelLevel() < 100 then
+        turtle.select(fuelSlot)
+        if turtle.getItemCount() > 0 then
+            turtle.refuel(1)
+            print("Brandstof bijgevuld")
+        else
+            print("Niet genoeg brandstof! Stoppen en terug naar start")
+            return false
+        end
+    end
+    turtle.select(saplingSlot)
+    if turtle.getItemCount() == 0 then
+        print("Geen saplings beschikbaar! Stoppen en terug naar start")
+        return false
+    end
+    return true
+end
+
+-- TERUG NAAR STARTPOS
+local function goToStart()
+    print("Terug naar startpositie")
+    while turtle.detectDown() do turtle.down() end
+    -- ga horizontaal terug
+    -- voor nu aannemen dat startX/startZ = huidige relatieve pos
+    -- compacte versie: draai terug en move backwards per dx/dz
+    -- (kan later uitgebreid worden met echte coördinaten)
+end
+
+-- HAK KOLM VERTICAAL
+local function harvestColumn(colNum)
+    print("Hakken kolom "..colNum)
+    while true do
+        if turtle.detectUp() then
+            turtle.digUp()
+            if not turtle.up() then
+                print("Kon niet omhoog, terug naar start")
+                goToStart()
+                return false
+            end
+        else
+            break
+        end
+    end
+    -- TERUG NAAR GRONDLAAG
+    while turtle.detectDown() do
+        turtle.down()
+    end
+    print("Kolom "..colNum.." voltooid")
+    return true
+end
+
+-- BEWEGING RELATIEF TOT STARTPOS
+local function moveTo(dx,dz)
+    if dx==1 then turtle.forward() end
+    if dz==1 then turtle.turnRight(); turtle.forward(); turtle.turnLeft() end
+end
+local function returnTo(dx,dz)
+    if dz==1 then turtle.turnRight(); turtle.back(); turtle.turnLeft() end
+    if dx==1 then turtle.back() end
+end
+
+-- HARVEST 2x2 BOOM
+local function harvestTree()
+    local positions = {{0,0},{0,1},{1,0},{1,1}}
+    for i,p in ipairs(positions) do
+        moveTo(p[1],p[2])
+        if not harvestColumn(i) then
+            return false
+        end
+        returnTo(p[1],p[2])
+    end
+    return true
+end
+
+-- PLANT 2x2 SAPLINGS
+local function plantTree()
+    turtle.select(saplingSlot)
+    local positions = {{0,0},{0,1},{1,0},{1,1}}
+    for i,p in ipairs(positions) do
+        moveTo(p[1],p[2])
+        if turtle.getItemCount() == 0 then
+            print("Saplings op tijdens planten! Terug naar start")
+            goToStart()
+            return false
+        end
+        if not turtle.placeDown() then
+            print("Kon sapling niet plaatsen bij "..i..", terug naar start")
+            goToStart()
+            return false
+        end
+        returnTo(p[1],p[2])
+    end
+    return true
+end
+
+-- DROPPEN LOGS
+local function storeLogs()
+    print("Logs droppen in chest")
+    for s=2,16 do
+        turtle.select(s)
+        if turtle.getItemCount()>0 then
+            if chestSide=="right" then turtle.turnRight() end
+            turtle.drop()
+            if chestSide=="right" then turtle.turnLeft() end
+        end
+    end
+end
+
+-- HOOFDLOOP
+while true do
+    print("=== Nieuwe ronde ===")
+    if not checkResources() then
+        goToStart()
+        break
+    end
+
+    print("Start oogsten")
+    if not harvestTree() then
+        print("Fout bij oogsten, ronde gestopt")
+        break
+    end
+    print("Oogsten voltooid")
+
+    storeLogs()
+    print("Logs opgeslagen")
+
+    print("Saplings planten")
+    if not plantTree() then
+        print("Fout bij planten, ronde gestopt")
+        break
+    end
+    print("Saplings geplant")
+
+    print("Wachten 3 minuten...")
+    sleep(180)
+end
