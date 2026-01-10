@@ -1,138 +1,96 @@
--- mega_tree_farm.lua
--- CC:Tweaked, Minecraft 1.21
--- Automatische 2x2 spruce mega tree farm
+-- CONFIG
+local saplingSlot = 1 -- slot met saplings
+local fuelSlot = 16   -- optioneel, slot met brandstof
 
-local FUEL_SLOT = 1
-local SAPLING_SLOT = 2
-local LOG_NAME = "minecraft:spruce_log"
-local SLEEP_TIME = 20 -- seconden wachten tussen checks
-
--- ========== Basis bewegingen ==========
-local function turnRight() turtle.turnRight() end
-local function turnLeft() turtle.turnLeft() end
-
-local function forward()
-    while not turtle.forward() do
-        if turtle.detect() then turtle.dig() end
-        sleep(0.2)
-    end
-end
-
-local function up()
-    while not turtle.up() do
-        if turtle.detectUp() then turtle.digUp() end
-        sleep(0.2)
-    end
-end
-
-local function down()
-    while not turtle.down() do
-        if turtle.detectDown() then turtle.digDown() end
-        sleep(0.2)
-    end
-end
-
--- Refuel
-local function refuelIfNeeded()
+-- Hulpfuncties
+function refuelIfNeeded()
     if turtle.getFuelLevel() < 100 then
-        turtle.select(FUEL_SLOT)
+        turtle.select(fuelSlot)
         turtle.refuel(1)
     end
 end
 
--- ========== Boom detectie ==========
-local function isLog()
-    local success, data = turtle.inspect()
-    return success and data.name == LOG_NAME
-end
-
-local function isMegaTree()
-    -- Check de 2x2 blokken in front en rechts
-    forward()
-    local frontLeft = isLog()
-    turnRight()
-    local frontRight = isLog()
-    turnLeft()
-    back()
-    return frontLeft and frontRight
-end
-
--- ========== Boom hakken ==========
-local function chopMegaTree()
-    print("Boom gevonden! Hakken...")
-
-    -- Turtle gaat naar hoek van 2x2
-    turtle.dig()
-    forward()
-    turtle.dig()
-    turnRight()
-    forward()
-    turtle.dig()
-
-    local height = 0
-    -- Loop omhoog
-    while true do
-        local anyBlock = false
-        -- hak rondom (4 kanten)
-        for i=1,4 do
-            if turtle.detect() then turtle.dig() anyBlock=true end
-            turnRight()
+-- Plant een 2x2 sapling
+function plantTree()
+    turtle.select(saplingSlot)
+    for x = 0, 1 do
+        for z = 0, 1 do
+            turtle.placeDown()
+            if z == 0 then
+                turtle.forward()
+            end
         end
-        -- hak boven
-        if turtle.detectUp() then
-            turtle.digUp() anyBlock=true
-        end
-
-        if anyBlock then
-            up()
-            height = height + 1
-        else
-            break
-        end
+        turtle.back()
+        turtle.turnRight()
+        turtle.forward()
+        turtle.turnLeft()
     end
+    turtle.back()
+    turtle.turnLeft()
+    turtle.turnLeft() -- terug naar originele facing
+end
 
+-- Controleer of boom volgroeid is (blokken boven saplings)
+function isTreeGrown()
+    for x = 0, 1 do
+        for z = 0, 1 do
+            if turtle.inspectUp() then
+                local success, data = turtle.inspectUp()
+                if success and data.name:find("log") then
+                    return true
+                end
+            end
+            if z == 0 then turtle.forward() end
+        end
+        turtle.back()
+        turtle.turnRight()
+        turtle.forward()
+        turtle.turnLeft()
+    end
+    turtle.back()
+    turtle.turnLeft()
+    turtle.turnLeft()
+    return false
+end
+
+-- Harvest een 2x2 boom
+function harvestTree()
+    for y = 1, 10 do  -- max boomhoogte
+        for x = 0, 1 do
+            for z = 0, 1 do
+                local success, block = turtle.inspectUp()
+                if success and block.name:find("log") then
+                    turtle.digUp()
+                end
+                if z == 0 then turtle.forward() end
+            end
+            turtle.back()
+            if x == 0 then turtle.turnRight(); turtle.forward(); turtle.turnLeft() end
+        end
+        if not turtle.detectUp() then break end
+        turtle.up()
+    end
     -- Terug naar grond
-    for i=1,height do down() end
-
-    -- terug naar startpositie
-    turnLeft()
-    forward()
-    turnLeft()
-    forward()
-
-    -- Plant saplings
-    turtle.select(SAPLING_SLOT)
-    turtle.placeDown()
-    forward()
-    turtle.placeDown()
-    turnRight()
-    forward()
-    turtle.placeDown()
-    back()
-    turnLeft()
-    back()
-
-    print("Boom gekapt en saplings geplant!")
-end
-
--- ========== Wacht totdat boom groeit ==========
-local function waitForGrowth()
-    print("Wachten totdat boom groeit...")
-    while true do
-        forward()
-        if isLog() then
-            back()
-            break
-        end
-        back()
-        sleep(SLEEP_TIME)
+    for i = 1, 10 do
+        turtle.down()
     end
 end
 
--- ========== Main loop ==========
+-- Hoofdloop
 while true do
     refuelIfNeeded()
-    waitForGrowth()
-    chopMegaTree()
-    print("Klaar, wacht tot volgende groei...")
+    
+    if isTreeGrown() then
+        print("Boom is volgroeid! Harvesting...")
+        harvestTree()
+        print("Boom geoogst.")
+    else
+        print("Boom nog niet volgroeid, wachten...")
+    end
+    
+    plantTree()
+    print("Saplings geplant.")
+    
+    -- Wacht 30 minuten (3600 ticks) voordat je opnieuw checkt
+    sleep(1800) -- 1800 seconden = 30 minuten
 end
