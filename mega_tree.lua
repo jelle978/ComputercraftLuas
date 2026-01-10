@@ -1,6 +1,6 @@
 -- CONFIG
-local saplingSlot = 1   -- slot met spruce saplings
-local fuelSlot = 16     -- slot met brandstof
+local saplingSlot = 1  -- slot met spruce saplings
+local fuelSlot = 16    -- slot met brandstof (optioneel)
 
 -- REFUEL FUNCTIE
 function refuelIfNeeded()
@@ -16,42 +16,51 @@ end
 
 -- HARVEST 2x2 BOOM
 function harvestTree()
-    -- Ga door 2x2 grid
-    local directions = {{0,0},{0,1},{1,0},{1,1}}
-    local startX, startZ = 0, 0 -- referentiepositie
-    -- ga omhoog en hak alles
-    local maxHeight = 20
-    for y = 1,maxHeight do
-        for i=1,#directions do
-            local dx, dz = directions[i][1], directions[i][2]
-            -- beweeg naar dit blok
-            if dx == 1 then turtle.forward() end
-            if dz == 1 then turtle.turnRight(); turtle.forward(); turtle.turnLeft() end
+    local positions = {
+        {0,0},
+        {0,1},
+        {1,0},
+        {1,1}
+    }
 
-            -- hak als er log is
-            while true do
-                local success, block = turtle.inspectUp()
-                if success and block.name:find("log") then
-                    turtle.digUp()
-                    turtle.up()
-                else
-                    break
-                end
-            end
+    for _, pos in ipairs(positions) do
+        local dx, dz = pos[1], pos[2]
 
-            -- terug naar grondlaag
-            while turtle.getY() > 0 do
-                turtle.down()
-            end
-
-            -- terug naar startpositie van de grid
-            if dz == 1 then turtle.turnRight(); turtle.back(); turtle.turnLeft() end
-            if dx == 1 then turtle.back() end
+        -- Beweeg naar het blok
+        if dx == 1 then turtle.forward() end
+        if dz == 1 then
+            turtle.turnRight()
+            turtle.forward()
+            turtle.turnLeft()
         end
+
+        -- Hak alle logs boven dit blok
+        while true do
+            local success, block = turtle.inspectUp()
+            if success and block.name:find("log") then
+                turtle.digUp()
+                turtle.up()
+            else
+                break
+            end
+        end
+
+        -- Ga terug naar startlaag
+        while turtle.getY() > 0 do
+            turtle.down()
+        end
+
+        -- Terug naar startpositie van de grid
+        if dz == 1 then
+            turtle.turnRight()
+            turtle.back()
+            turtle.turnLeft()
+        end
+        if dx == 1 then turtle.back() end
     end
 end
 
--- ZET LOGS IN CHEST ONDER TURTLE
+-- OPSLAAN IN CHEST ONDER TURTLE
 function storeLogs()
     for slot = 2,16 do
         turtle.select(slot)
@@ -64,24 +73,35 @@ end
 -- PLANT 2x2 SAPLINGS
 function plantTree()
     turtle.select(saplingSlot)
-    for x=0,1 do
-        for z=0,1 do
-            turtle.placeDown()
-            if z == 0 then turtle.forward() end
-        end
-        turtle.back()
-        if x == 0 then
+    local positions = {
+        {0,0},
+        {0,1},
+        {1,0},
+        {1,1}
+    }
+
+    for _, pos in ipairs(positions) do
+        local dx, dz = pos[1], pos[2]
+
+        -- Beweeg naar het blok
+        if dx == 1 then turtle.forward() end
+        if dz == 1 then
             turtle.turnRight()
             turtle.forward()
             turtle.turnLeft()
         end
+
+        -- Plant sapling
+        turtle.placeDown()
+
+        -- Terug naar startpositie van de grid
+        if dz == 1 then
+            turtle.turnRight()
+            turtle.back()
+            turtle.turnLeft()
+        end
+        if dx == 1 then turtle.back() end
     end
-    -- terug naar start
-    turtle.turnLeft()
-    turtle.turnLeft()
-    turtle.forward()
-    turtle.turnLeft()
-    turtle.turnRight()
 end
 
 -- HOOFDLOOP
@@ -100,6 +120,6 @@ while true do
     plantTree()
     print("Saplings geplant.")
 
-    -- Wacht 3 minuten
+    print("Wachten 3 minuten...")
     sleep(180)
 end
