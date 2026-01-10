@@ -1,0 +1,56 @@
+-- CONFIG
+local saplingSlot, fuelSlot = 1, 16
+local chestSide = "right"
+
+-- REFUEL
+local function refuel()
+    if turtle.getFuelLevel() < 100 then
+        turtle.select(fuelSlot)
+        if turtle.getItemCount() > 0 then turtle.refuel(1)
+        else print("Niet genoeg brandstof!") end
+    end
+end
+
+-- HAK EEN KOLM
+local function harvestColumn()
+    while true do
+        if turtle.detect() then turtle.dig()
+        elseif turtle.detectUp() then turtle.digUp(); if not turtle.up() then break end
+        else break end
+    end
+    while turtle.detectDown() do turtle.down() end
+end
+
+-- BEWEGING FUNCTIES
+local function moveTo(dx,dz) if dx==1 then turtle.forward() end; if dz==1 then turtle.turnRight(); turtle.forward(); turtle.turnLeft() end end
+local function returnTo(dx,dz) if dz==1 then turtle.turnRight(); turtle.back(); turtle.turnLeft() end; if dx==1 then turtle.back() end end
+
+-- HARVEST 2x2
+local function harvestTree()
+    local pos={{0,0},{0,1},{1,0},{1,1}}
+    for _,p in ipairs(pos) do moveTo(p[1],p[2]); harvestColumn(); returnTo(p[1],p[2]) end
+end
+
+-- PLANT 2x2
+local function plantTree()
+    turtle.select(saplingSlot)
+    local pos={{0,0},{0,1},{1,0},{1,1}}
+    for _,p in ipairs(pos) do moveTo(p[1],p[2]); turtle.placeDown(); returnTo(p[1],p[2]) end
+end
+
+-- DROPPEN LOGS
+local function storeLogs()
+    for s=2,16 do
+        turtle.select(s)
+        if turtle.getItemCount()>0 then if chestSide=="right" then turtle.turnRight() end; turtle.drop(); if chestSide=="right" then turtle.turnLeft() end end
+    end
+end
+
+-- HOOFDLOOP
+while true do
+    refuel()
+    print("Boom oogsten..."); harvestTree(); print("Boom geoogst.")
+    print("Logs opslaan..."); storeLogs(); print("Logs opgeslagen.")
+    print("Saplings planten..."); plantTree(); print("Saplings geplant.")
+    print("Wachten 3 minuten..."); sleep(180)
+end
