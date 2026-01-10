@@ -1,0 +1,122 @@
+-- CONFIG
+local saplingSlot = 1
+local fuelSlot = 16
+local chestSide = "right" -- "right" of "left"
+
+-- REFUEL
+function refuelIfNeeded()
+    if turtle.getFuelLevel() < 100 then
+        turtle.select(fuelSlot)
+        if turtle.getItemCount() > 0 then
+            turtle.refuel(1)
+        else
+            print("Niet genoeg brandstof!")
+        end
+    end
+end
+
+-- HAK EEN KOLM VOORUIT TOT GEEN LOGS MEER
+function harvestColumn()
+    while turtle.detect() do
+        turtle.dig()
+        turtle.forward()
+    end
+    -- terug naar start
+    while not turtle.detectBack() do
+        turtle.back()
+    end
+end
+
+-- HARVEST 2x2 BOOM VANUIT ZIJKANT
+function harvestTree()
+    local positions = {
+        {0,0}, {0,1},
+        {1,0}, {1,1}
+    }
+
+    for _, pos in ipairs(positions) do
+        local dx, dz = pos[1], pos[2]
+
+        -- beweeg naar de juiste rij/kolom naast de boom
+        if dx == 1 then turtle.forward() end
+        if dz == 1 then
+            turtle.turnRight()
+            turtle.forward()
+            turtle.turnLeft()
+        end
+
+        -- hak kolom
+        harvestColumn()
+
+        -- terug naar startpositie
+        if dz == 1 then
+            turtle.turnRight()
+            turtle.back()
+            turtle.turnLeft()
+        end
+        if dx == 1 then turtle.back() end
+    end
+end
+
+-- DROPPEN IN CHEST
+function storeLogs()
+    for slot=2,16 do
+        turtle.select(slot)
+        if turtle.getItemCount() > 0 then
+            if chestSide == "right" then turtle.turnRight() end
+            turtle.drop()
+            if chestSide == "right" then turtle.turnLeft() end
+        end
+    end
+end
+
+-- PLANT SAPLINGS IN 2x2 VANUIT ZIJKANT
+function plantTree()
+    turtle.select(saplingSlot)
+    local positions = {
+        {0,0}, {0,1},
+        {1,0}, {1,1}
+    }
+    for _, pos in ipairs(positions) do
+        local dx, dz = pos[1], pos[2]
+
+        -- beweeg naar positie naast boomblok
+        if dx == 1 then turtle.forward() end
+        if dz == 1 then
+            turtle.turnRight()
+            turtle.forward()
+            turtle.turnLeft()
+        end
+
+        -- plant sapling
+        turtle.place()
+
+        -- terug naar start
+        if dz == 1 then
+            turtle.turnRight()
+            turtle.back()
+            turtle.turnLeft()
+        end
+        if dx == 1 then turtle.back() end
+    end
+end
+
+-- HOOFDLOOP
+while true do
+    refuelIfNeeded()
+
+    print("Boom oogsten...")
+    harvestTree()
+    print("Boom geoogst.")
+
+    print("Logs opslaan...")
+    storeLogs()
+    print("Logs opgeslagen.")
+
+    print("Saplings planten...")
+    plantTree()
+    print("Saplings geplant.")
+
+    print("Wachten 3 minuten...")
+    sleep(180)
+end
