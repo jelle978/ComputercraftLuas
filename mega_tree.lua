@@ -1,6 +1,6 @@
 -- CONFIG
-local saplingSlot = 1  -- slot met spruce saplings
-local fuelSlot = 16    -- slot met brandstof
+local saplingSlot = 1   -- slot met spruce saplings
+local fuelSlot = 16     -- slot met brandstof
 local chestSide = "right" -- kant waar de chest staat: "right" of "left"
 
 -- REFUEL FUNCTIE
@@ -15,10 +15,9 @@ function refuelIfNeeded()
     end
 end
 
--- HULPFUNCTIE: ga naar boomblok vanaf zijkant
--- pos = {dx, dz} relativ aan turtle startpositie
-function moveToBlock(pos)
-    local dx, dz = pos[1], pos[2]
+-- BEWEGING FUNCTIES
+-- ga naar een boomblok vanaf startpositie naast de boom
+local function moveToBlock(dx, dz)
     if dx == 1 then turtle.forward() end
     if dz == 1 then
         turtle.turnRight()
@@ -27,9 +26,8 @@ function moveToBlock(pos)
     end
 end
 
--- ga terug naar startpositie
-function returnToStart(pos)
-    local dx, dz = pos[1], pos[2]
+-- terug naar startpositie naast de boom
+local function returnToStart(dx, dz)
     if dz == 1 then
         turtle.turnRight()
         turtle.back()
@@ -38,39 +36,38 @@ function returnToStart(pos)
     if dx == 1 then turtle.back() end
 end
 
+-- HAK ALLE LOGS VAN EEN BLOK, rekening houdend met ongelijke kolomhoogte
+local function harvestColumn()
+    while true do
+        local success, block = turtle.inspectUp()
+        if success and block.name:find("log") then
+            turtle.digUp()
+            if not turtle.up() then break end
+        else
+            break
+        end
+    end
+    -- terug naar grond
+    while turtle.detectDown() do
+        turtle.down()
+    end
+end
+
 -- HARVEST 2x2 BOOM VANUIT ZIJKANT
 function harvestTree()
     local positions = {
         {0,0}, {0,1},
         {1,0}, {1,1}
     }
-
     for _, pos in ipairs(positions) do
-        moveToBlock(pos)
-
-        -- hak alle logs boven dit blok
-        while true do
-            local success, block = turtle.inspectUp()
-            if success and block.name:find("log") then
-                turtle.digUp()
-                if not turtle.up() then break end
-            else
-                break
-            end
-        end
-
-        -- terug naar grondlaag
-        while turtle.detectDown() do
-            turtle.down()
-        end
-
-        returnToStart(pos)
+        moveToBlock(pos[1], pos[2])
+        harvestColumn()
+        returnToStart(pos[1], pos[2])
     end
 end
 
--- DROPPEN IN CHEST AAN ZIJKANT
+-- DROPPEN LOGS IN CHEST
 function storeLogs()
-    local chestFunction = (chestSide == "right") and turtle.drop or turtle.dropUp
     for slot = 2,16 do
         turtle.select(slot)
         if turtle.getItemCount() > 0 then
@@ -88,11 +85,10 @@ function plantTree()
         {0,0}, {0,1},
         {1,0}, {1,1}
     }
-
     for _, pos in ipairs(positions) do
-        moveToBlock(pos)
+        moveToBlock(pos[1], pos[2])
         turtle.placeDown()
-        returnToStart(pos)
+        returnToStart(pos[1], pos[2])
     end
 end
 
