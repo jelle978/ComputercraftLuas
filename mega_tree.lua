@@ -1,78 +1,43 @@
--- 2x2 Spruce Mega Tree Farm (Improved)
-
+-- mega_tree.lua  (Verbeterde mega spray)
 local SAPLING_SLOT = 2
 local FUEL_SLOT = 1
 
 function refuelIfNeeded()
-    if turtle.getFuelLevel() < 200 then
-        turtle.select(FUEL_SLOT)
-        turtle.refuel(10)
-    end
+    turtle.select(FUEL_SLOT)
+    turtle.refuel(1)
 end
 
--- Hak een blok als het er is
 function digIfBlock()
-    if turtle.detect() then
-        turtle.dig()
-    end
+    if turtle.detect() then turtle.dig() end
 end
 
 function digUpIfBlock()
-    if turtle.detectUp() then
-        turtle.digUp()
+    if turtle.detectUp() then turtle.digUp() end
+end
+
+-- Slice één laag rondom
+function clearLayer()
+    for i = 1, 4 do
+        digIfBlock()
+        turtle.turnRight()
     end
 end
 
-function digDownIfBlock()
-    if turtle.detectDown() then
-        turtle.digDown()
-    end
+-- Ga één blok omhoog en hak alles rondom
+function chopUp()
+    digUpIfBlock()
+    turtle.up()
+    clearLayer()
 end
 
--- Grondvlak hakken
-function clearBase()
-    digIfBlock()
-    turtle.forward()
-    digIfBlock()
-    turtle.turnRight()
-    digIfBlock()
-    turtle.back()
-    turtle.turnLeft()
-end
-
--- 2x2 stam omhoog hakken
-function chopMegaTree()
-    -- Zet turtle in hoek voor 2x2
-    turtle.dig()
-    turtle.forward()
-    turtle.dig()
-    turtle.turnRight()
-    turtle.dig()
-    turtle.forward()
-    turtle.dig()
-
+-- Loop omhoog zolang er hout is
+function chopTree()
     local height = 0
 
-    -- Ga omhoog en hak alles rondom mee
     while true do
-        local anyBlock = false
-
-        -- Hakken boven
+        clearLayer()         -- hak horizontaal
+        digUpIfBlock()       -- hak boven
         if turtle.detectUp() then
-            turtle.digUp()
-            anyBlock = true
-        end
-
-        -- Hakken in alle richtingen
-        for i = 1, 4 do
-            if turtle.detect() then
-                turtle.dig()
-                anyBlock = true
-            end
-            turtle.turnRight()
-        end
-
-        if anyBlock then
             turtle.up()
             height = height + 1
         else
@@ -80,24 +45,17 @@ function chopMegaTree()
         end
     end
 
-    -- Ga naar beneden
-    for i = 1, height do
-        turtle.down()
-    end
-
-    -- Ga terug naar startpositie
-    turtle.turnRight()
-    turtle.forward()
-    turtle.turnRight()
-    turtle.forward()
-    turtle.turnLeft()
+    return height
 end
 
--- Plant 2x2 spruce
+-- Ga terug naar grond
+function goDown(h)
+    for i = 1, h do turtle.down() end
+end
+
+-- Plant 2×2 saplings
 function plant2x2()
     turtle.select(SAPLING_SLOT)
-
-    -- Sta op startpositie
     turtle.placeDown()
     turtle.forward()
     turtle.placeDown()
@@ -109,31 +67,39 @@ function plant2x2()
     turtle.back()
 end
 
--- Drop items in kist achter turtle
+-- Drop items in chest achter turtle
 function dropInChest()
-    turtle.turnAround()
-    for i = 3, 16 do
+    turtle.turnRight()
+    turtle.turnRight()
+    for i=3,16 do
         turtle.select(i)
         turtle.drop()
     end
-    turtle.turnAround()
+    turtle.turnRight()
+    turtle.turnRight()
 end
 
--- Main loop
+-- Main Loop
 while true do
     refuelIfNeeded()
-    print("Wachten op groei...")
+
+    print("Wachten op boom...")
     while not turtle.detect() do
-        sleep(10)
+        sleep(5)
     end
 
-    print("Hak boom...")
-    chopMegaTree()
-    print("Plant saplings...")
+    print("Boom hakken...")
+    local h = chopTree()
+
+    print("Terug naar grond...")
+    goDown(h)
+
+    print("Saplings planten...")
     plant2x2()
-    print("Leeg inventaris...")
+
+    print("Items droppen...")
     dropInChest()
-    print("Klaar! Wacht tot volgende groei.")
+
+    print("Klaar — wacht tot volgende boom!")
     sleep(60)
 end
-
