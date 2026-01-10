@@ -1,7 +1,6 @@
 -- CONFIG
 local saplingSlot = 1  -- slot met spruce saplings
 local fuelSlot = 16    -- slot met brandstof (optioneel)
-local maxTreeHeight = 20 -- maximale boomhoogte voor oogsten
 
 -- REFUEL FUNCTIE
 function refuelIfNeeded()
@@ -15,19 +14,14 @@ function refuelIfNeeded()
     end
 end
 
--- HARVEST 2x2 BOOM
+-- HARVEST 2x2 BOOM (zonder max height)
 function harvestTree()
-    local positions = {
-        {0,0},
-        {0,1},
-        {1,0},
-        {1,1}
-    }
+    local positions = {{0,0},{0,1},{1,0},{1,1}}
 
     for _, pos in ipairs(positions) do
         local dx, dz = pos[1], pos[2]
 
-        -- Beweeg naar het blok
+        -- beweeg naar het blok
         if dx == 1 then turtle.forward() end
         if dz == 1 then
             turtle.turnRight()
@@ -35,23 +29,23 @@ function harvestTree()
             turtle.turnLeft()
         end
 
-        -- Hak alle logs boven dit blok
-        for i = 1, maxTreeHeight do
+        -- hak alle logs boven dit blok
+        while true do
             local success, block = turtle.inspectUp()
             if success and block.name:find("log") then
                 turtle.digUp()
-                turtle.up()
+                if not turtle.up() then break end  -- stop veilig als niet omhoog kan
             else
                 break
             end
         end
 
-        -- Terug naar grondlaag (max 20 blokken omlaag)
-        for i = 1, maxTreeHeight do
-            if not turtle.down() then break end
+        -- terug naar grondlaag
+        while turtle.detectDown() do
+            turtle.down()
         end
 
-        -- Terug naar startpositie van de grid
+        -- terug naar startpositie van de grid
         if dz == 1 then
             turtle.turnRight()
             turtle.back()
@@ -74,17 +68,12 @@ end
 -- PLANT 2x2 SAPLINGS
 function plantTree()
     turtle.select(saplingSlot)
-    local positions = {
-        {0,0},
-        {0,1},
-        {1,0},
-        {1,1}
-    }
+    local positions = {{0,0},{0,1},{1,0},{1,1}}
 
     for _, pos in ipairs(positions) do
         local dx, dz = pos[1], pos[2]
 
-        -- Beweeg naar het blok
+        -- beweeg naar het blok
         if dx == 1 then turtle.forward() end
         if dz == 1 then
             turtle.turnRight()
@@ -92,10 +81,10 @@ function plantTree()
             turtle.turnLeft()
         end
 
-        -- Plant sapling
+        -- plant sapling
         turtle.placeDown()
 
-        -- Terug naar startpositie van de grid
+        -- terug naar startpositie
         if dz == 1 then
             turtle.turnRight()
             turtle.back()
