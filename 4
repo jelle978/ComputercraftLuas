@@ -1,0 +1,93 @@
+print("== TEST: 2x2 boom kappen ==")
+
+-- =========================
+-- Veilige beweging
+-- =========================
+function safeForward()
+    while not turtle.forward() do
+        print("[DEBUG] Vooruit geblokkeerd, graven...")
+        turtle.dig()
+        sleep(0.2)
+    end
+end
+
+function safeUp()
+    while not turtle.up() do
+        print("[DEBUG] Omhoog geblokkeerd, graven...")
+        turtle.digUp()
+        sleep(0.2)
+    end
+end
+
+function safeDown()
+    while not turtle.down() do
+        print("[DEBUG] Omlaag geblokkeerd, graven...")
+        turtle.digDown()
+        sleep(0.2)
+    end
+end
+
+-- =========================
+-- Kap kolom voor turtle
+-- =========================
+function chopColumn()
+    print("[DEBUG] Start: kap kolom voor turtle")
+
+    local upMoves = 0
+
+    print("[DEBUG] Hak onderste blok")
+    turtle.dig()
+    safeForward()
+
+    while true do
+        local ok, data = turtle.inspectUp()
+        if ok and data.name:find("log") then
+            print("[DEBUG] Hout boven, hakken en omhoog")
+            turtle.digUp()
+            safeUp()
+            upMoves = upMoves + 1
+            print("[DEBUG] Omhoog gegaan:", upMoves)
+        else
+            print("[DEBUG] Geen hout meer boven")
+            break
+        end
+    end
+
+    print("[DEBUG] Ga terug naar beneden:", upMoves)
+    for i = 1, upMoves do
+        safeDown()
+    end
+
+    print("[DEBUG] Ga achteruit naar start")
+    turtle.back()
+
+    print("[DEBUG] Kolom klaar (weer op grond)")
+end
+
+-- =========================
+-- Main: 4 kolommen vast pad
+-- =========================
+
+print("[DEBUG] Kolom 1")
+chopColumn()
+
+print("[DEBUG] Naar kolom 2 (rechts)")
+turtle.turnRight()
+safeForward()
+turtle.turnLeft()
+chopColumn()
+
+print("[DEBUG] Naar kolom 4 (vooruit)")
+safeForward()
+chopColumn()
+
+print("[DEBUG] Naar kolom 3 (links)")
+turtle.turnLeft()
+safeForward()
+turtle.turnRight()
+chopColumn()
+
+print("[DEBUG] Terug naar start")
+turtle.back()
+
+print("== TEST KLAAR ==")
