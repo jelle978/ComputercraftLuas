@@ -1,0 +1,70 @@
+print("== TEST: 2x2 boom kappen ==")
+
+-- =========================
+-- Kap kolom voor turtle
+-- =========================
+function chopColumn()
+    print("[DEBUG] Start: kap kolom voor turtle")
+
+    local upMoves = 0
+
+    -- Hak onderste blok en ga erin
+    print("[DEBUG] Hak onderste blok")
+    turtle.dig()
+    turtle.forward()
+
+    -- Nu alles boven ons
+    while true do
+        local ok, data = turtle.inspectUp()
+        if ok and data.name:find("log") then
+            print("[DEBUG] Hout boven, hakken en omhoog")
+            turtle.digUp()
+            turtle.up()
+            upMoves = upMoves + 1
+            print("[DEBUG] Omhoog gegaan:", upMoves)
+        else
+            print("[DEBUG] Geen hout meer boven")
+            break
+        end
+    end
+
+    -- Terug naar beneden
+    print("[DEBUG] Ga terug naar beneden:", upMoves, "blokken")
+    for i = 1, upMoves do
+        turtle.down()
+    end
+
+    -- Terug naar startpositie
+    print("[DEBUG] Ga achteruit naar start")
+    turtle.back()
+
+    print("[DEBUG] Klaar met deze kolom (weer op de grond)")
+end
+
+-- =========================
+-- Main sequence
+-- =========================
+
+print("[DEBUG] Kolom 1 (linksonder)")
+chopColumn()
+
+print("[DEBUG] Naar kolom 2 (rechts)")
+turtle.turnRight()
+turtle.forward()
+turtle.turnLeft()
+chopColumn()
+
+print("[DEBUG] Naar kolom 4 (rechtsboven)")
+turtle.forward()
+chopColumn()
+
+print("[DEBUG] Naar kolom 3 (linksboven)")
+turtle.turnLeft()
+turtle.forward()
+turtle.turnRight()
+chopColumn()
+
+print("[DEBUG] Terug naar startpositie")
+turtle.back()
+
+print("== TEST KLAAR ==")
