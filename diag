@@ -1,0 +1,27 @@
+print("== DIAGNOSE ==")
+
+print("detect():", turtle.detect())
+
+local ok, data = turtle.inspect()
+print("inspect():", ok)
+if ok then
+  print("block name:", data.name)
+end
+
+print("Probeer dig()")
+print("dig():", turtle.dig())
+
+print("detect() na dig:", turtle.detect())
+
+local ok2, data2 = turtle.inspect()
+print("inspect() na dig:", ok2)
+if ok2 then
+  print("block name:", data2.name)
+end
+
+print("Probeer forward()")
+print("forward():", turtle.forward())
+
+print("detect() na forward:", turtle.detect())
+
+print("== KLAAR ==")
