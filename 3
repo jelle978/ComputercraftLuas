@@ -1,0 +1,23 @@
+function safeForward()
+    while not turtle.forward() do
+        print("[DEBUG] Vooruit geblokkeerd, graven...")
+        turtle.dig()
+        sleep(0.2)
+    end
+end
+
+function safeUp()
+    while not turtle.up() do
+        print("[DEBUG] Omhoog geblokkeerd, graven...")
+        turtle.digUp()
+        sleep(0.2)
+    end
+end
+
+function safeDown()
+    while not turtle.down() do
+        print("[DEBUG] Omlaag geblokkeerd, graven...")
+        turtle.digDown()
+        sleep(0.2)
+    end
+end
