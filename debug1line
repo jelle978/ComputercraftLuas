@@ -1,0 +1,35 @@
+print("== TEST: Kap 1 kolom ==")
+
+local height = 0
+
+-- Eerst het onderste blok voor ons weghakken
+print("Hak onderste blok")
+turtle.dig()
+turtle.forward()
+
+-- Nu omhoog werken
+while true do
+    local ok, data = turtle.inspectUp()
+    if ok and data.name:find("log") then
+        print("Hout boven, hakken en omhoog")
+        turtle.digUp()
+        turtle.up()
+        height = height + 1
+        print("Hoogte nu:", height)
+    else
+        print("Geen hout meer boven")
+        break
+    end
+end
+
+-- Terug naar beneden
+print("Ga terug naar beneden")
+for i = 1, height do
+    turtle.down()
+end
+
+-- Terug naar startpositie
+print("Ga achteruit naar start")
+turtle.back()
+
+print("== TEST KLAAR ==")
